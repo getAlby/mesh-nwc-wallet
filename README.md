@@ -12,6 +12,10 @@ It implements mesh-llm's `wallet.v1` plugin capability, the same interface as th
 > Early proof of concept, like mesh-llm's Lightning payments themselves. Use a
 > dedicated NWC connection with a small budget.
 
+Tested on mainnet with mesh-llm 0.78.1, using two NWC wallets backed by Alby Hub:
+a client-only buyer paid a seller for one inference request (1-sat input plus
+1-sat output invoice), and both sides' ledgers and wallets settled to match.
+
 ## Setup
 
 1. **Create a connection** in your wallet. In Alby Hub: *Connections → Add
@@ -48,6 +52,19 @@ It implements mesh-llm's `wallet.v1` plugin capability, the same interface as th
    `MESH_LLM_PLUGIN_URL`. Avoid that if your `config.toml` is shared or synced.
 
 The plugin connects only when mesh-llm opens the wallet for a payment operation.
+
+5. **Sellers: bill in whole sats.** Most NWC wallets, Alby Hub included, refuse
+   invoices that aren't a whole number of satoshis (`the amount must be a whole
+   number of satoshis`). mesh-llm's default minimum invoice is 1 msat, so small
+   requests fail with a 503 on the buyer before any invoice is issued. Round
+   charges up to whole sats:
+
+   ```bash
+   mesh-llm wallet pricing MODEL --minimum-invoice-msat 1000
+   ```
+
+   That makes each paid request cost at least 2 sats: a 1-sat input invoice
+   plus a 1-sat output invoice.
 
 ## Behavior
 

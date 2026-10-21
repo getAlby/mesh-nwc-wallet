@@ -263,7 +263,16 @@ impl WalletProvider for NwcProvider {
                 expiry: Some(u64::from(expiry_secs)),
             })
             .await
-            .map_err(|error| anyhow::anyhow!("NWC invoice creation failed: {error}"))?;
+            .map_err(|error| {
+                // Most NWC wallets (Alby Hub included) only issue whole-sat
+                // invoices, while mesh-llm's default minimum is 1 msat.
+                let hint = if amount_msat % 1000 != 0 {
+                    "; this wallet may need whole-sat amounts: set `mesh-llm wallet pricing MODEL --minimum-invoice-msat 1000`"
+                } else {
+                    ""
+                };
+                anyhow::anyhow!("NWC invoice creation failed: {error}{hint}")
+            })?;
         let invoice = Invoice::parse(&response.invoice)?;
         // A wallet that ignores `expiry` must not hand the host a longer-lived
         // invoice than it asked for.
