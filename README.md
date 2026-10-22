@@ -53,11 +53,12 @@ a client-only buyer paid a seller for one inference request (1-sat input plus
 
 The plugin connects only when mesh-llm opens the wallet for a payment operation.
 
-5. **Sellers: bill in whole sats.** Most NWC wallets, Alby Hub included, refuse
+5. **Sellers: bill in whole sats.** Many NWC wallets, Alby Hub included, refuse
    invoices that aren't a whole number of satoshis (`the amount must be a whole
-   number of satoshis`). mesh-llm's default minimum invoice is 1 msat, so small
-   requests fail with a 503 on the buyer before any invoice is issued. Round
-   charges up to whole sats:
+   number of satoshis`); others silently round the amount. mesh-llm's default
+   minimum invoice is 1 msat, so small requests fail with a 503 on the buyer
+   before any invoice is issued. The plugin also rejects any invoice whose
+   amount differs from what mesh-llm priced. Round charges up to whole sats:
 
    ```bash
    mesh-llm wallet pricing MODEL --minimum-invoice-msat 1000

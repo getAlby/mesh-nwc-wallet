@@ -274,6 +274,13 @@ impl WalletProvider for NwcProvider {
                 anyhow::anyhow!("NWC invoice creation failed: {error}{hint}")
             })?;
         let invoice = Invoice::parse(&response.invoice)?;
+        // Some wallets silently round msat amounts to whole sats, even down to
+        // an amountless invoice; the host must get exactly what it priced.
+        ensure!(
+            invoice.amount_msat == Some(amount_msat),
+            "wallet issued an invoice for {:?} msat instead of {amount_msat} msat; set `mesh-llm wallet pricing MODEL --minimum-invoice-msat 1000`",
+            invoice.amount_msat
+        );
         // A wallet that ignores `expiry` must not hand the host a longer-lived
         // invoice than it asked for.
         ensure!(
